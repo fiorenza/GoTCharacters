@@ -1,0 +1,15 @@
+version: '2.4'
+services:
+  challenge-php:
+    build: ./challenge-php/.
+    container_name: challenge-php
+    restart: always
+    volumes:
+      - ../symfony:/var/www:rw
+      - ./config/php/php.ini-dev:/usr/local/etc/php/conf.d/php.ini:ro
+      - ./config/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+    networks:
+      - challenge-network
+
+networks:
+  challenge-network:
