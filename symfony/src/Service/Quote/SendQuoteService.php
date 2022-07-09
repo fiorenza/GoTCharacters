@@ -6,14 +6,20 @@ use App\Service\BaseService;
 
 class SendQuoteService extends BaseService
 {
-    public function execute(string $quote, string $characterId)
+    public function execute(array $characters)
     {
         $json = <<<JSON
-            {"query":"mutation CreateQuote {  insert_Quote(objects: {text: \"%quote_text%\", character_id: %character_id%}) {    returning {      id      text    }  }}","operationName":"CreateQuote"}
+            {"query":"mutation CreateQuote {  insert_Quote(objects: [%quotes%]) {    returning {      id      text    }  }}","operationName":"CreateQuote"}
         JSON;
 
-        $json = str_replace('%quote_text%', $quote, $json);
-        $json = str_replace('%character_id%', $characterId, $json);
+        $quotesArray = [];
+        foreach ($characters as $character) {
+            foreach ($character['quotes'] as $quote) {
+                $quotesArray[] = sprintf('{text: \"%s\", character_id: %s}', str_replace('"', '\\\\\"', $quote), $character['id']);
+            }
+        }
+
+        $json = str_replace('%quotes%', implode(',', $quotesArray), $json);
         $headers = [
           'x-hasura-admin-secret' => 'uALQXDLUu4D9BC8jAfXgDBWm1PMpbp0pl5SQs4chhz2GG14gAVx5bfMs4I553keV',
         ];

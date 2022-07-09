@@ -84,7 +84,7 @@ class SendCharacterQuotes extends Command
             if ($quotes) {
                 $quotesToSave = array_map(fn($quote) => $quote['sentence'], is_array($quotes) ? $quotes : [$quotes]);
             }
-            $charactersToSave[] = [
+            $charactersToSave[$character['fullName']] = [
                 'name' => $character['fullName'],
                 'image_url' => $character['imageUrl'],
                 'quotes' => $quotesToSave ?? []
@@ -99,20 +99,21 @@ class SendCharacterQuotes extends Command
         return $charactersToSave;
     }
 
-    private function sendCharacters(array $characteres): void
+    private function sendCharacters(array $characters): void
     {
-        foreach ($characteres as $character) {
-            $savedCharacter = $this->sendCharacterService->execute($character['name'], $character['image_url']);
+        $savedCharacters = $this->sendCharacterService->execute($characters);
+        if (!isset($savedCharacters['data']) or !isset($savedCharacters['data']['insert_Character']['returning'])) {
+            throw new Exception($savedCharacters['errors'][0]['message'] ?? 'Failed to send the character');
+        }
 
-            if (!isset($savedCharacter['data']) or !isset($savedCharacter['data']['insert_Character']['returning'][0]['id'])) {
-                throw new Exception($savedCharacter['errors'][0]['message'] ?? 'Failed to send the character');
-            }
+        foreach ($savedCharacters['data']['insert_Character']['returning'] as $character) {
+            $characters[$character['name']]['id'] = $character['id'];
+        }
 
-            $characterId = $savedCharacter['data']['insert_Character']['returning'][0]['id'];
+        $savedQuotes = $this->sendQuoteService->execute($characters);
 
-            foreach ($character['quotes'] as $quote) {
-                $this->sendQuoteService->execute($quote, $characterId);
-            }
+        if (!isset($savedQuotes['data']) or !isset($savedQuotes['data']['insert_Quote']['returning'])) {
+            throw new Exception($savedQuotes['errors'][0]['message'] ?? 'Failed to send the character');
         }
     }
 }
