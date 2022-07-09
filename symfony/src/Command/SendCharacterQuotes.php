@@ -50,7 +50,7 @@ class SendCharacterQuotes extends Command
 
     protected function configure(): void
     {
-        $this->addArgument('limit', InputArgument::OPTIONAL, 'Total of characters that will be listed.');
+        $this->addArgument('limit', InputArgument::OPTIONAL, 'Total of characters that will be saved.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -65,7 +65,6 @@ class SendCharacterQuotes extends Command
             $output->writeln(sprintf('[%s] COMMAND SUCCESS: app:send-character-quotes', date('Y-m-d H:i:s')));
         } catch (Exception $e) {
             $this->deleteAllCharactersService->execute();
-            $this->logger->error($e->getMessage(), $e->getTrace());
             $output->writeln(sprintf('[%s] COMMAND FAILED: app:send-character-quotes: %s', date('Y-m-d H:i:s'), $e->getMessage()));
             return Command::FAILURE;
         }
@@ -73,7 +72,7 @@ class SendCharacterQuotes extends Command
         return Command::SUCCESS;
     }
 
-    private function getCharacters(int $limit = 0)
+    private function getCharacters(int $limit = 0): array
     {
         $characters = $this->getCharacterService->execute();
 
@@ -99,6 +98,9 @@ class SendCharacterQuotes extends Command
         return $charactersToSave;
     }
 
+    /**
+     * @throws Exception
+     */
     private function sendCharacters(array $characters): void
     {
         $savedCharacters = $this->sendCharacterService->execute($characters);
