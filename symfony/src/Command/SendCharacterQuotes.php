@@ -64,8 +64,9 @@ class SendCharacterQuotes extends Command
 
             $output->writeln(sprintf('[%s] COMMAND SUCCESS: app:send-character-quotes', date('Y-m-d H:i:s')));
         } catch (Exception $e) {
-            $this->deleteAllCharactersService->execute();
+            $this->logger->error($e->getMessage(), $e->getTrace());
             $output->writeln(sprintf('[%s] COMMAND FAILED: app:send-character-quotes: %s', date('Y-m-d H:i:s'), $e->getMessage()));
+            $this->deleteAllCharactersService->execute();
             return Command::FAILURE;
         }
 
